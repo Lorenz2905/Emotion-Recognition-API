@@ -1,4 +1,5 @@
 import os
+import config_loader as config
 
 from fastapi import APIRouter, UploadFile, File, Form
 from typing import List
@@ -6,13 +7,13 @@ from emotionRecognition.emotion_recognition import video_emotion_analysis
 
 router = APIRouter()
 
-@router.post("/upload")
-async def upload_files(
+@router.post("/analyser")
+async def analyser(
     files: List[UploadFile] = File(...),
     prompt: str = Form(...),
     agents_behavior: str = Form(...),
 ):
-    temp_dir = "/Users/lorenzneugebauer/PycharmProjects/Emotion-Recognition-API/temp_files"
+    temp_dir = config.get_temp_dir()
     file_paths = []
 
     for file in files:

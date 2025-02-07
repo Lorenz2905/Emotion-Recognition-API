@@ -12,10 +12,19 @@ def load_config(file_path="config.yaml"):
 def get_device():
     return CONFIG.get("device") if isinstance(CONFIG, dict) else None
 
-def get_model_path():
-    return CONFIG.get("model_path") if isinstance(CONFIG, dict) else None
+def get_qwen_model_path():
+    return CONFIG.get("qwen_model_path") if isinstance(CONFIG, dict) else None
+
+def get_janus_model_path():
+    return CONFIG.get("janus_model_path") if isinstance(CONFIG, dict) else None
 
 def get_use_flash_attention():
     return CONFIG.get("use_flash_attention", False) if isinstance(CONFIG, dict) else None
+
+def get_use_janus():
+    return CONFIG.get("use_janus", False) if isinstance(CONFIG, dict) else None
+
+def get_temp_dir():
+    return CONFIG.get("temp_dir") if isinstance(CONFIG, dict) else None
 
 load_config()

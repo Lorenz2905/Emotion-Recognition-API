@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from endpoints.image_analysis import router as upload_file_endpoint
+from endpoints.analysis import router as analysis_endpoint
+from endpoints.stream_analysis import router as analysis_stream_endpoint
 from emotionRecognition.emotion_recognition import load_analyser
 from console_logging import log_info
 
@@ -22,7 +23,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(upload_file_endpoint, tags=["Image Analysis"])
+app.include_router(analysis_endpoint, tags=["Multi Image Analysis"])
+app.include_router(analysis_stream_endpoint, tags=["Multi Image Analysis"])
 
 
 if __name__ == "__main__":

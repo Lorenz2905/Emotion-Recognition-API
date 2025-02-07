@@ -1,12 +1,21 @@
-from emotionRecognition.qwen_emotion_analyse import EmotionAnalyzer
-from console_logging import log_info
+from emotionRecognition.emotion_analyser import EmotionAnalyzer
+from emotionRecognition.janus_emotion_analyser import JanusEmotionAnalyzer
+from emotionRecognition.qwen_emotion_analyse import QwenEmotionAnalyzer
+from console_logging import log_info, log_error
+import config_loader as config
 
 ANALYSER = None
 
 
 def load_analyser():
     global ANALYSER
-    ANALYSER = EmotionAnalyzer()
+    if ANALYSER is not None:
+        return
+
+    if config.get_use_janus():
+        ANALYSER = JanusEmotionAnalyzer()
+    else:
+        ANALYSER = QwenEmotionAnalyzer()
 
 
 def video_emotion_analysis(temp_file_paths: list[str],user_prompt: str, system_prompt: str):
@@ -16,10 +25,23 @@ def video_emotion_analysis(temp_file_paths: list[str],user_prompt: str, system_p
     result = None
 
     if isinstance(ANALYSER, EmotionAnalyzer):
-        log_info("Calling QWEN2.5-VL")
-        result = ANALYSER.analyze_video_emotions(temp_file_paths,user_prompt,system_prompt)
+        log_info("Calling ANALYSER")
+        result = ANALYSER.analyze_video_emotions(temp_file_paths,user_prompt,system_prompt, False)
     else:
-        load_analyser()
-        video_emotion_analysis(temp_file_paths,user_prompt,system_prompt)
+        log_error("Can not found an emotion analyser")
+
+    return result
+
+def video_emotion_analysis_stream(temp_file_paths: list[str],user_prompt: str, system_prompt: str):
+    log_info("starting emotion analysis stream")
+    global ANALYSER
+
+    result = None
+
+    if isinstance(ANALYSER, EmotionAnalyzer):
+        log_info("Calling ANALYSER as stream")
+        result = ANALYSER.analyze_video_emotions(temp_file_paths,user_prompt,system_prompt, True)
+    else:
+        log_error("Can not found an emotion analyser")
 
     return result
