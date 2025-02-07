@@ -16,8 +16,8 @@ class JanusEmotionAnalyzer(EmotionAnalyzer):
         Initialisiert das Modell und den Prozessor.
         """
         self.model_path = config.get_janus_model_path()
-        vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(self.model_path)
-        self.tokenizer = vl_chat_processor.tokenizer
+        self.vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(self.model_path)
+        self.tokenizer = self.vl_chat_processor.tokenizer
         vl_gpt: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(
             self.model_path, trust_remote_code=True
         )

@@ -3,12 +3,13 @@
 #SBATCH --output=logs/output_%j.txt
 #SBATCH --error=logs/output_%j.txt
 #SBATCH --partition=dev_accelerated
-#SBATCH --time=01:00:00
+#SBATCH --time=00:20:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:2
 #SBATCH --mem-per-gpu=125400
-#SBATCH --cpus-per-gpu=20
+#SBATCH --cpus-per-gpu=36
 module add devel/cuda
 
-torchrun emotion-recognition-API/main.py
+cd /home/hk-project-starter-p0022892/uwlat/Emotion-Recognition-API/emotion_recognition_api
+torchrun main.py
