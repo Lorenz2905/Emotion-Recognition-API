@@ -1,0 +1,24 @@
+[project]
+name = "emotion-recognition-api"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Lorenz Neugebauer",email = "152261927+Lorenz2905@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flask (>=3.1.0,<4.0.0)",
+    "fastapi (>=0.115.8,<0.116.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
+    "torch (==2.4.0)",
+    "qwen-vl-utils (>=0.0.10,<0.0.11)",
+    "torchvision (==0.19.0)",
+
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
