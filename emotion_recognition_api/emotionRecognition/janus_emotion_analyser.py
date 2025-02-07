@@ -8,13 +8,8 @@ from emotionRecognition.emootion_analyser_utils import generate_janus_content
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
 
 
-
-
 class JanusEmotionAnalyzer(EmotionAnalyzer):
     def __init__(self):
-        """
-        Initialisiert das Modell und den Prozessor.
-        """
         self.model_path = config.get_janus_model_path()
         self.vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(self.model_path)
         self.tokenizer = self.vl_chat_processor.tokenizer
@@ -29,8 +24,6 @@ class JanusEmotionAnalyzer(EmotionAnalyzer):
             return
 
         content = generate_janus_content(images_path, text_message)
-        print("Content:")
-        print(content)
 
         conversation = [
             {
@@ -41,16 +34,13 @@ class JanusEmotionAnalyzer(EmotionAnalyzer):
             {"role": "<|Assistant|>", "content": system_prompt},
         ]
 
-        # load images and prepare for inputs
         pil_images = load_pil_images(conversation)
         prepare_inputs = self.vl_chat_processor(
             conversations=conversation, images=pil_images, force_batchify=True
         ).to(self.vl_gpt.device)
 
-        # # run image encoder to get the image embeddings
         inputs_embeds = self.vl_gpt.prepare_inputs_embeds(**prepare_inputs)
 
-        # # run the model to get the response
         outputs = self.vl_gpt.language_model.generate(
             inputs_embeds=inputs_embeds,
             attention_mask=prepare_inputs.attention_mask,

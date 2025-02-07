@@ -24,11 +24,7 @@ async def analyser(
 
         file_paths.append(file_path)
 
-
-    print(f"Dateipfade: {file_paths}")
     result = video_emotion_analysis(file_paths, prompt,agents_behavior)
-    print("RESULT: ")
-    print(result)
 
     for file_path in file_paths:
         os.remove(file_path)
