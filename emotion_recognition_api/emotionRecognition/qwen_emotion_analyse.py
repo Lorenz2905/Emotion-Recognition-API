@@ -73,6 +73,5 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )
 
-            print(output_text)
             raw_output = output_text[0]
             return raw_output

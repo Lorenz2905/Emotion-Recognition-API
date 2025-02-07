@@ -27,11 +27,11 @@ async def analyser(
 
     print(f"Dateipfade: {file_paths}")
     result = video_emotion_analysis(file_paths, prompt,agents_behavior)
+    print("RESULT: ")
     print(result)
 
     for file_path in file_paths:
         os.remove(file_path)
 
 
-    return {"message": "Dateien hochgeladen und verarbeitet", "files": file_paths, "prompt": prompt,
-            "agents_behavior": agents_behavior}
+    return {"message": result}

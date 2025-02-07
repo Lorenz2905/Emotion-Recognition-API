@@ -63,4 +63,4 @@ class JanusEmotionAnalyzer(EmotionAnalyzer):
         )
 
         answer = self.tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=True)
-        print(f"{prepare_inputs['sft_format'][0]}", answer)
+        return answer
