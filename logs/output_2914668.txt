@@ -1,0 +1,21 @@
+
+============================= JOB FEEDBACK =============================
+
+Job ID: 2914668
+Cluster: hk
+User/Group: uwlat/hk-project-starter-p0022892
+Account: hk-project-starter-p0022892
+State: CANCELLED (exit code 0)
+Partition: dev_accelerated
+Nodes: 1
+Cores per node: 72
+Nodelist: hkn0401
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 10:01:12 core-walltime
+Job Wall-clock time: 00:08:21
+Starttime: Sat Feb  8 08:31:45 2025
+Endtime: Sat Feb  8 08:40:06 2025
+Memory Utilized: 3.99 GB
+Memory Efficiency: 0.00% of 0.00 MB
+Energy Consumed: 283173 Joule / 78.6591666666667 Watthours
+Average node power draw: 565.215568862275 Watt

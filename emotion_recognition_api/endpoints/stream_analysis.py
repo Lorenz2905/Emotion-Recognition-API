@@ -25,8 +25,9 @@ async def stream_analyser(
             f.write(await file.read())
 
     output_stream = video_emotion_analysis_stream(file_paths, prompt, agents_behavior)
+    print(output_stream)
 
     for file_path in file_paths:
         os.remove(file_path)
 
-    return StreamingResponse(output_stream, media_type="application/octet-stream")
+    return output_stream

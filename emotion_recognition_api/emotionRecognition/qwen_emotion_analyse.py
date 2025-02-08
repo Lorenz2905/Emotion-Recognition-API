@@ -1,7 +1,7 @@
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, StoppingCriteriaList, StoppingCriteria
+from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
-
+from fastapi.responses import StreamingResponse
 import config_loader as config
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
 
@@ -55,15 +55,13 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
         inputs = inputs.to(config.get_device())
 
         if streaming:
-            stop_criteria = StoppingCriteriaList([StoppingCriteria(max_length=128)])
-
             def stream_output():
-                stream_generated_ids = self.model.generate(**inputs, max_new_tokens=128, stopping_criteria=stop_criteria)
-                for token_id in stream_generated_ids[0]:
-                    stream_output_text = self.processor.decode([token_id], skip_special_tokens=True)
-                    yield stream_output_text
+                for token_id in self.model.generate(**inputs, max_new_tokens=128):
+                    stream_output_text = self.processor.decode(token_id, skip_special_tokens=True)
+                    yield stream_output_text 
 
-            return stream_output()
+            return StreamingResponse(stream_output(), media_type="text/plain")
+
         else:
             generated_ids = self.model.generate(**inputs, max_new_tokens=128)
             generated_ids_trimmed = [
