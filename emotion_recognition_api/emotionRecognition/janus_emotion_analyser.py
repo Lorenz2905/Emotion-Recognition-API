@@ -6,6 +6,7 @@ from Janus.janus.utils.io import load_pil_images
 from console_logging import log_warning
 from emotionRecognition.emootion_analyser_utils import generate_janus_content
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
+from fastapi.responses import StreamingResponse
 
 
 class JanusEmotionAnalyzer(EmotionAnalyzer):
@@ -19,10 +20,6 @@ class JanusEmotionAnalyzer(EmotionAnalyzer):
         self.vl_gpt = vl_gpt.to(torch.bfloat16).cuda().eval()
 
     def analyze_video_emotions(self, images_path: list[str], text_message: str, system_prompt: str,  streaming: bool = False):
-        if streaming:
-            log_warning("Janus can not be used for streaming analyse. Please use Qwen2.5-VL")
-            return
-
         content = generate_janus_content(images_path, text_message)
 
         conversation = [
@@ -41,16 +38,34 @@ class JanusEmotionAnalyzer(EmotionAnalyzer):
 
         inputs_embeds = self.vl_gpt.prepare_inputs_embeds(**prepare_inputs)
 
-        outputs = self.vl_gpt.language_model.generate(
-            inputs_embeds=inputs_embeds,
-            attention_mask=prepare_inputs.attention_mask,
-            pad_token_id=self.tokenizer.eos_token_id,
-            bos_token_id=self.tokenizer.bos_token_id,
-            eos_token_id=self.tokenizer.eos_token_id,
-            max_new_tokens=512,
-            do_sample=False,
-            use_cache=True,
-        )
+        if streaming:
+            def stream_output():
+                for token_id in self.vl_gpt.language_model.generate(
+                        inputs_embeds=inputs_embeds,
+                        attention_mask=prepare_inputs.attention_mask,
+                        pad_token_id=self.tokenizer.eos_token_id,
+                        bos_token_id=self.tokenizer.bos_token_id,
+                        eos_token_id=self.tokenizer.eos_token_id,
+                        max_new_tokens=512,
+                        do_sample=False,
+                        use_cache=True,
+                        output_scores=True,  # I don't know if this works
+                ):
+                    output_text = self.tokenizer.decode(token_id.cpu().tolist(), skip_special_tokens=True)
+                    yield output_text
 
-        answer = self.tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=True)
-        return answer
+            return StreamingResponse(stream_output(), media_type="text/plain")
+        else:
+            outputs = self.vl_gpt.language_model.generate(
+                inputs_embeds=inputs_embeds,
+                attention_mask=prepare_inputs.attention_mask,
+                pad_token_id=self.tokenizer.eos_token_id,
+                bos_token_id=self.tokenizer.bos_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
+                max_new_tokens=512,
+                do_sample=False,
+                use_cache=True,
+            )
+
+            answer = self.tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=True)
+            return answer

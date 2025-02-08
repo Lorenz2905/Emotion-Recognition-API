@@ -13,7 +13,7 @@ async def stream_analyser(
         files: List[UploadFile] = File(...),
         prompt: str = Form(...),
         agents_behavior: str = Form(...),
-):
+) -> StreamingResponse:
     temp_dir = config.get_temp_dir()
     file_paths = []
 
