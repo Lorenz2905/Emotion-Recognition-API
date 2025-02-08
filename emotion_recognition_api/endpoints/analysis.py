@@ -10,8 +10,8 @@ router = APIRouter()
 @router.post("/analyser")
 async def analyser(
     files: List[UploadFile] = File(...),
-    prompt: str = Form(...),
-    agents_behavior: str = Form(...),
+    prompt: str = Form("Analyze the emotions in the images."),
+    agents_behavior: str = Form("You are an assistant for emotion recognition"),
 ):
     temp_dir = config.get_temp_dir()
     file_paths = []
