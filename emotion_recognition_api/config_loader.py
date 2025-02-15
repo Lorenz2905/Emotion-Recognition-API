@@ -30,7 +30,7 @@ def get_temp_dir():
 def get_api_base_url():
     return CONFIG.get("vLLM").get("api_base", "") if isinstance(CONFIG, dict) else None
 
-def get_api_key_url():
+def get_api_key():
     return CONFIG.get("vLLM").get("api_key", "") if isinstance(CONFIG, dict) else None
 
 load_config()

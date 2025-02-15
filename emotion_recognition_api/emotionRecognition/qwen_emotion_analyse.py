@@ -10,7 +10,7 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
     def __init__(self):
         check_service()
 
-        openai_api_key = config.get_api_key_url()
+        openai_api_key = config.get_api_key()
         openai_api_base = config.get_api_base_url()
 
         self.client = OpenAI(

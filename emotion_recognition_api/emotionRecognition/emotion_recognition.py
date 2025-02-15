@@ -3,7 +3,6 @@ from emotionRecognition.janus_emotion_analyser import JanusEmotionAnalyzer
 from emotionRecognition.qwen_emotion_analyse import QwenEmotionAnalyzer
 from console_logging import log_info, log_error
 import config_loader as config
-import time
 
 ANALYSER = None
 

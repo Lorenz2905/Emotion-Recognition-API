@@ -1,5 +1,7 @@
 import requests
 
+import config_loader as config
+
 from console_logging import log_info, log_error
 
 
@@ -15,7 +17,7 @@ def generate_janus_content(image_paths: list, prompt: str) -> str:
 
 
 def check_service():
-    url = "http://localhost:8001/v1/models"
+    url = config.get_api_base_url()
     try:
         response = requests.get(url)
         if response.status_code == 200:
