@@ -1,38 +1,25 @@
+from config_loader import CONFIG
+from emotionRecognition.emootion_analyser_utils import check_service
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
-import subprocess
 from openai import OpenAI
+import config_loader as config
 import base64
-import requests
-
-def check_service():
-    url = "http://localhost:8001/v1/models"
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print("✅ Service erreichbar!")
-            print("📌 Geladene Modelle:", response.json())
-        else:
-            print(f"⚠️ Service antwortet, aber Fehler: {response.status_code}")
-            print(response.text)
-    except requests.exceptions.ConnectionError:
-        print("❌ vLLM-Service nicht erreichbar!")
 
 
 class QwenEmotionAnalyzer(EmotionAnalyzer):
     def __init__(self):
-        pass
+        check_service()
 
+        openai_api_key = config.get_api_key_url()
+        openai_api_base = config.get_api_base_url()
 
-    def analyze_video_emotions(self, images_path: list[str], text_message: str, system_prompt: str, streaming: bool = False):
-        openai_api_key = "EMPTY"
-        openai_api_base = "http://localhost:8001/v1"
-
-        client = OpenAI(
+        self.client = OpenAI(
             api_key=openai_api_key,
             base_url=openai_api_base,
         )
 
 
+    def analyze_video_emotions(self, images_path: list[str], text_message: str, system_prompt: str, streaming: bool = False):
         content = []
 
         for image_path in images_path:
@@ -50,15 +37,8 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
             {"role": "user", "content": content},
         ]
 
-        print("messages:")
-        print(messages)
-
-        print("test if servis is available")
-        check_service()
-        print("test done")
-
-        chat_response = client.chat.completions.create(
-            model="Qwen/Qwen2.5-VL-7B-Instruct",
+        chat_response = self.client.chat.completions.create(
+            model=config.get_qwen_model_path(),
             messages=messages,
         )
 

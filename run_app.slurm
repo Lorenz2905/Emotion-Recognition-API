@@ -16,17 +16,17 @@ vllm serve Qwen/Qwen2.5-VL-7B-Instruct \
     --host 0.0.0.0 \
     --dtype bfloat16 \
     --limit-mm-per-prompt image=10,video=1 \
-    --max-model-len 64000 &  # "&" startet den Prozess im Hintergrund
+    --max-model-len 64000 &
 
 VLLM_PID=$!
 
 sleep 90
-echo "⏳ Warten auf vLLM-Server..."
+echo "⏳ Waiting for vLLM server..."
 while ! curl -s http://localhost:8001/v1/models > /dev/null; do
     sleep 10
-    echo "🔄 vLLM-Server lädt noch..."
+    echo "🔄 vLLM server is still loading..."
 done
-echo "✅ vLLM-Server ist bereit!"
+echo "✅ vLLM server is ready!"
 
 cd /home/hk-project-starter-p0022892/uwlat/Emotion-Recognition-API/emotion_recognition_api
 

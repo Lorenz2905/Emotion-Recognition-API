@@ -1,3 +1,8 @@
+import requests
+
+from console_logging import log_info, log_error
+
+
 def generate_janus_content(image_paths: list, prompt: str) -> str:
     content = ""
 
@@ -7,3 +12,16 @@ def generate_janus_content(image_paths: list, prompt: str) -> str:
     content += prompt
 
     return content
+
+
+def check_service():
+    url = "http://localhost:8001/v1/models"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            log_info("vLLM service available")
+        else:
+            log_error(f"vLLM service connection error: {response.status_code}")
+            log_error(response.text)
+    except requests.exceptions.ConnectionError:
+        log_error("vLLM service not available")
