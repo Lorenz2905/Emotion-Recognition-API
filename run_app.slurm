@@ -9,7 +9,27 @@
 #SBATCH --gres=gpu:2
 #SBATCH --mem-per-gpu=125400
 #SBATCH --cpus-per-gpu=36
-module add devel/cuda
+module add devel/cuda/12.4
+
+vllm serve Qwen/Qwen2.5-VL-7B-Instruct \
+    --port 8001 \
+    --host 0.0.0.0 \
+    --dtype bfloat16 \
+    --limit-mm-per-prompt image=10,video=1 \
+    --max-model-len 64000 &  # "&" startet den Prozess im Hintergrund
+
+VLLM_PID=$!
+
+sleep 90
+echo "⏳ Warten auf vLLM-Server..."
+while ! curl -s http://localhost:8001/v1/models > /dev/null; do
+    sleep 10
+    echo "🔄 vLLM-Server lädt noch..."
+done
+echo "✅ vLLM-Server ist bereit!"
 
 cd /home/hk-project-starter-p0022892/uwlat/Emotion-Recognition-API/emotion_recognition_api
-torchrun main.py
+
+torchrun main.py &
+
+wait $VLLM_PID
