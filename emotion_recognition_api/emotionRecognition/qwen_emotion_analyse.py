@@ -1,32 +1,32 @@
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
-from qwen_vl_utils import process_vision_info
-import torch
-from fastapi.responses import StreamingResponse
-import config_loader as config
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
+import subprocess
+from openai import OpenAI
 
 
 class QwenEmotionAnalyzer(EmotionAnalyzer):
     def __init__(self):
-        """
-        Initialisiert das Modell und den Prozessor.
-        """
-        model_path = config.get_qwen_model_path()
-        if config.get_use_flash_attention():
-            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-                model_path,
-                torch_dtype=torch.bfloat16,
-                attn_implementation="flash_attention_2",
-                device_map="auto",
-            )
-        else:
-            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-                model_path, torch_dtype="auto", device_map="auto"
-            )
+        cmd = [
+        "vllm", "serve", "Qwen/Qwen2.5-VL-7B-Instruct",
+        "--port", "8001",
+        "--host", "0.0.0.0",
+        "--dtype", "bfloat16",
+        "--limit-mm-per-prompt", "image=5,video=5"
+        ]
 
-        self.processor = AutoProcessor.from_pretrained(model_path)
+        process = subprocess.Popen(cmd)
+        print(f"Server läuft mit PID: {process.pid}")
+
+
 
     def analyze_video_emotions(self, images_path: list[str], text_message: str, system_prompt: str, streaming: bool = False):
+        openai_api_key = "EMPTY"
+        openai_api_base = "http://localhost:8001/v1"
+
+        client = OpenAI(
+            api_key=openai_api_key,
+            base_url=openai_api_base,
+        )
+
 
         content = [{"type": "image", "image": f"file://{path}"} for path in images_path]
         content.append({"type": "text", "text": text_message})
@@ -40,36 +40,17 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
             {"role": "system", "content": system_prompt},
 
         ]
+        print(messages)
 
-        text = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        chat_response = client.chat.completions.create(
+            model="Qwen2.5-VL-7B-Instruct",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {
+                    "role": "user",
+                    "content": messages
+                },
+            ],
         )
-        image_inputs, video_inputs = process_vision_info(messages)
-        inputs = self.processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
-        )
-        inputs = inputs.to(config.get_device())
 
-        if streaming:
-            def stream_output():
-                for token_id in self.model.generate(**inputs, max_new_tokens=128):
-                    stream_output_text = self.processor.decode(token_id, skip_special_tokens=True)
-                    yield stream_output_text 
-
-            return StreamingResponse(stream_output(), media_type="text/plain")
-
-        else:
-            generated_ids = self.model.generate(**inputs, max_new_tokens=128)
-            generated_ids_trimmed = [
-                out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-            ]
-            output_text = self.processor.batch_decode(
-                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-            )
-
-            raw_output = output_text[0]
-            return raw_output
+        return chat_response
