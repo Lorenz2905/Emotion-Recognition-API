@@ -41,8 +41,7 @@ def video_emotion_analysis_stream(temp_file_paths: list[str],user_prompt: str, s
 
     if isinstance(ANALYSER, EmotionAnalyzer):
         log_info("Calling ANALYSER as stream")
-        result = ANALYSER.analyze_video_emotions(temp_file_paths,user_prompt,system_prompt, True)
+        return ANALYSER.analyze_video_emotions(temp_file_paths,user_prompt,system_prompt, True)
     else:
         log_error("Can not found an emotion analyser")
 
-    return result

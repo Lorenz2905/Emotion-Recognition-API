@@ -1,4 +1,4 @@
-from config_loader import CONFIG
+from fastapi.responses import StreamingResponse
 from emotionRecognition.emootion_analyser_utils import check_service
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
 from openai import OpenAI
@@ -40,6 +40,19 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
         chat_response = self.client.chat.completions.create(
             model=config.get_qwen_model_path(),
             messages=messages,
+            stream=streaming,
         )
 
-        return chat_response
+        if streaming:
+            async def stream_generator():
+                try:
+                    async for chunk in chat_response:
+                        if chunk.choices and chunk.choices[0].delta:
+                            text_chunk = chunk.choices[0].delta.get("content", "")
+                            yield text_chunk
+                except Exception as e:
+                    yield f"Streaming-Fehler: {str(e)}"
+
+            return StreamingResponse(stream_generator(), media_type="text/plain")
+        else:
+            return chat_response
