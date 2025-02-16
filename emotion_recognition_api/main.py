@@ -2,28 +2,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from emotionRecognition.janus_emotion_analyser import JanusEmotionAnalyzer
-from emotionRecognition.qwen_emotion_analyse import QwenEmotionAnalyzer
+from emotionRecognition.loading_emotion_analyser import load_analyser
 from endpoints.analysis import router as analysis_endpoint
 from endpoints.stream_analysis import router as analysis_stream_endpoint
 from console_logging import log_info
-import config_loader as config
-
-
-ANALYSER = None
-
-
-def load_analyser():
-    global ANALYSER
-    if ANALYSER is not None:
-        return
-
-    if config.get_use_janus():
-        log_info("Use Janus Emotion Analyzer")
-        ANALYSER = JanusEmotionAnalyzer()
-    else:
-        log_info("Use Qwen Emotion Analyzer")
-        ANALYSER = QwenEmotionAnalyzer()
 
 
 @asynccontextmanager
