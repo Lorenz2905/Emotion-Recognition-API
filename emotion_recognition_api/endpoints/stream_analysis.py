@@ -3,7 +3,8 @@ from typing import List
 import os
 from fastapi.responses import StreamingResponse
 import config_loader as config
-from emotionRecognition.qwen_emotion_analyse import QwenEmotionAnalyzer
+from main import ANALYSER
+
 
 router = APIRouter()
 
@@ -24,5 +25,4 @@ async def stream_analyser(
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-    analyser = QwenEmotionAnalyzer()
-    return analyser.analyze_stream_video_emotions(file_paths, prompt, agents_behavior)
+    return ANALYSER.analyze_stream_video_emotions(file_paths, prompt, agents_behavior)
