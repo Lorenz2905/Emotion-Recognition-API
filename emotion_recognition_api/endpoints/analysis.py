@@ -3,9 +3,11 @@ import config_loader as config
 
 from fastapi import APIRouter, UploadFile, File, Form
 from typing import List
-from emotionRecognition.emotion_recognition import video_emotion_analysis
+from emotionRecognition.loading_emotion_analyser import get_analyser
 
 router = APIRouter()
+
+ANALYSER = get_analyser()
 
 @router.post("/analyser")
 async def analyser(
@@ -13,6 +15,7 @@ async def analyser(
     prompt: str = Form("Analyze the emotions in the images."),
     agents_behavior: str = Form("You are an assistant for emotion recognition"),
 ):
+    global ANALYSER
     temp_dir = config.get_temp_dir()
     file_paths = []
 
@@ -24,10 +27,10 @@ async def analyser(
 
         file_paths.append(file_path)
 
-    result = video_emotion_analysis(file_paths, prompt,agents_behavior)
+    result = ANALYSER.analyze_video_emotions(file_paths, prompt, agents_behavior)
 
     for file_path in file_paths:
         os.remove(file_path)
 
 
-    return {"message": result}
+    return result

@@ -1,6 +1,10 @@
 device: "cuda"
 temp_dir: "/home/hk-project-starter-p0022892/uwlat/Emotion-Recognition-API/temp_files"
 
+vLLM:
+  api_key: "EMPTY"
+  api_base: "http://localhost:8001/v1"
+
 qwen:
   qwen_model_path: "Qwen/Qwen2.5-VL-7B-Instruct"
   use_flash_attention: true
