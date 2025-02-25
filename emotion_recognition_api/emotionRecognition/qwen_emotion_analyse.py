@@ -18,8 +18,7 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
             base_url=openai_api_base,
         )
 
-
-    def analyze_video_emotions(self, images_path: list[str], text_message: str, system_prompt: str):
+    def analyze_video_emotions(self, images_path: List[str], text_message: str, system_prompt: str):
         messages = qwen_massage_generator(images_path, text_message, system_prompt)
 
         chat_response = self.client.chat.completions.create(
@@ -27,6 +26,7 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
             messages=messages,
         )
 
+        response_message = chat_response.choices[0].message.content
         return chat_response
 
     def analyze_stream_video_emotions(self, images_path: List[str], text_message: str, system_prompt: str) -> StreamingResponse:
@@ -37,5 +37,5 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
             messages=messages,
             stream=True,
         )
-
+        
         return StreamingResponse(stream_generator(response_stream), media_type="text/plain")
