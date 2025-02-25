@@ -1,36 +1,41 @@
-import os
-import config_loader as config
-
-from fastapi import APIRouter, UploadFile, File, Form
-from typing import List
+import base64
+from fastapi import APIRouter, HTTPException
 from emotionRecognition.loading_emotion_analyser import get_analyser
+from endpoints.model import AnalyseRequest
 
 router = APIRouter()
-
 ANALYSER = get_analyser()
 
 @router.post("/analyser")
-async def analyser(
-    files: List[UploadFile] = File(...),
-    prompt: str = Form("Analyze the emotions in the images."),
-    agents_behavior: str = Form("You are an assistant for emotion recognition"),
-):
-    global ANALYSER
-    temp_dir = config.get_temp_dir()
-    file_paths = []
+async def analyser(request: AnalyseRequest):
+    for message_index, message in enumerate(request.messages):
+        for content_index, item in enumerate(message.content):
+            if item.type == "image":
+                image_data = item.image
 
-    for file in files:
-        file_path = os.path.join(temp_dir, file.filename)
+                if not image_data or not image_data.startswith("data:image;base64,"):
+                    raise HTTPException(
+                        status_code=400,
+                        detail={
+                            "error": "Image does not start with 'data:image;base64,'.",
+                            "message_index": message_index,
+                            "content_index": content_index
+                        }
+                    )
 
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
+                base64_str = image_data.split(",", 1)[1]
 
-        file_paths.append(file_path)
+                try:
+                    base64.b64decode(base64_str, validate=True)
+                except (base64.binascii.Error, ValueError):
+                    raise HTTPException(
+                        status_code=400,
+                        detail={
+                            "error": "Invalid base64 encoding.",
+                            "message_index": message_index,
+                            "content_index": content_index
+                        }
+                    )
 
-    result = ANALYSER.analyze_video_emotions(file_paths, prompt, agents_behavior)
-
-    for file_path in file_paths:
-        os.remove(file_path)
-
-
+    result = ANALYSER.analyze_video_emotions(request)
     return result

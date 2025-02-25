@@ -5,6 +5,8 @@ from emotionRecognition.emootion_analyser_utils import check_service, qwen_massa
 from emotionRecognition.emotion_analyser import EmotionAnalyzer
 from openai import OpenAI
 import config_loader as config
+from endpoints.model import AnalyseRequest
+
 
 class QwenEmotionAnalyzer(EmotionAnalyzer):
     def __init__(self):
@@ -18,12 +20,11 @@ class QwenEmotionAnalyzer(EmotionAnalyzer):
             base_url=openai_api_base,
         )
 
-    def analyze_video_emotions(self, images_path: List[str], text_message: str, system_prompt: str):
-        messages = qwen_massage_generator(images_path, text_message, system_prompt)
+    def analyze_video_emotions(self, massage: AnalyseRequest):
 
         chat_response = self.client.chat.completions.create(
             model=config.get_qwen_model_path(),
-            messages=messages,
+            messages=massage,
         )
 
         response_message = chat_response.choices[0].message.content
