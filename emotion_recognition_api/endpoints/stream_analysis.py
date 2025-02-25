@@ -3,10 +3,12 @@ from typing import List
 import os
 from fastapi.responses import StreamingResponse
 import config_loader as config
-from emotionRecognition.emotion_recognition import video_emotion_analysis_stream
+from emotionRecognition.loading_emotion_analyser import get_analyser
+
 
 router = APIRouter()
 
+ANALYSER = get_analyser()
 
 @router.post("/stream_analyser")
 async def stream_analyser(
@@ -14,6 +16,7 @@ async def stream_analyser(
         prompt: str = Form("Analyze the emotions in the images."),
         agents_behavior: str = Form("You are an assistant for emotion recognition"),
 ) -> StreamingResponse:
+    global ANALYSER
     temp_dir = config.get_temp_dir()
     file_paths = []
 
@@ -24,10 +27,4 @@ async def stream_analyser(
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-    output_stream = video_emotion_analysis_stream(file_paths, prompt, agents_behavior)
-    print(output_stream)
-
-    for file_path in file_paths:
-        os.remove(file_path)
-
-    return output_stream
+    return ANALYSER.analyze_stream_video_emotions(file_paths, prompt, agents_behavior)

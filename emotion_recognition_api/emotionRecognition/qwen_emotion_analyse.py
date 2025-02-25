@@ -1,75 +1,41 @@
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
-from qwen_vl_utils import process_vision_info
-import torch
-from fastapi.responses import StreamingResponse
-import config_loader as config
-from emotionRecognition.emotion_analyser import EmotionAnalyzer
+from typing import List
 
+from fastapi.responses import StreamingResponse
+from emotionRecognition.emootion_analyser_utils import check_service, qwen_massage_generator, stream_generator
+from emotionRecognition.emotion_analyser import EmotionAnalyzer
+from openai import OpenAI
+import config_loader as config
 
 class QwenEmotionAnalyzer(EmotionAnalyzer):
     def __init__(self):
-        """
-        Initialisiert das Modell und den Prozessor.
-        """
-        model_path = config.get_qwen_model_path()
-        if config.get_use_flash_attention():
-            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-                model_path,
-                torch_dtype=torch.bfloat16,
-                attn_implementation="flash_attention_2",
-                device_map="auto",
-            )
-        else:
-            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-                model_path, torch_dtype="auto", device_map="auto"
-            )
+        check_service()
 
-        self.processor = AutoProcessor.from_pretrained(model_path)
+        openai_api_key = config.get_api_key()
+        openai_api_base = config.get_api_base_url()
 
-    def analyze_video_emotions(self, images_path: list[str], text_message: str, system_prompt: str, streaming: bool = False):
-
-        content = [{"type": "image", "image": f"file://{path}"} for path in images_path]
-        content.append({"type": "text", "text": text_message})
-
-
-        messages = [
-            {
-                "role": "user",
-                "content": content,
-            },
-            {"role": "system", "content": system_prompt},
-
-        ]
-
-        text = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        self.client = OpenAI(
+            api_key=openai_api_key,
+            base_url=openai_api_base,
         )
-        image_inputs, video_inputs = process_vision_info(messages)
-        inputs = self.processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
+
+    def analyze_video_emotions(self, images_path: List[str], text_message: str, system_prompt: str):
+        messages = qwen_massage_generator(images_path, text_message, system_prompt)
+
+        chat_response = self.client.chat.completions.create(
+            model=config.get_qwen_model_path(),
+            messages=messages,
         )
-        inputs = inputs.to(config.get_device())
 
-        if streaming:
-            def stream_output():
-                for token_id in self.model.generate(**inputs, max_new_tokens=128):
-                    stream_output_text = self.processor.decode(token_id, skip_special_tokens=True)
-                    yield stream_output_text 
+        response_message = chat_response.choices[0].message.content
+        return chat_response
 
-            return StreamingResponse(stream_output(), media_type="text/plain")
+    def analyze_stream_video_emotions(self, images_path: List[str], text_message: str, system_prompt: str) -> StreamingResponse:
+        messages = qwen_massage_generator(images_path, text_message, system_prompt)
 
-        else:
-            generated_ids = self.model.generate(**inputs, max_new_tokens=128)
-            generated_ids_trimmed = [
-                out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-            ]
-            output_text = self.processor.batch_decode(
-                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-            )
-
-            raw_output = output_text[0]
-            return raw_output
+        response_stream = self.client.chat.completions.create(
+            model=config.get_qwen_model_path(),
+            messages=messages,
+            stream=True,
+        )
+        
+        return StreamingResponse(stream_generator(response_stream), media_type="text/plain")
